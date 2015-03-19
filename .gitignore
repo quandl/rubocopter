@@ -7,3 +7,6 @@ test/dummy/log/*.log
 test/dummy/tmp/
 test/dummy/.sass-cache
 .idea/
+rubocop_result.txt
+
+*.gem

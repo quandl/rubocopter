@@ -1,0 +1,7 @@
+= Rubocopter
+
+A simple gem that you can run in your projects to aid in running RuboCop against only the changes in your .git projects.
+
+== License
+
+This project rocks and uses MIT-LICENSE.
