@@ -6,6 +6,8 @@ RuboCopter::Options = Struct.new(:hash)
 
 class RuboCopter::CLI
 
+  attr_reader :options
+
   def run(args = ARGV)
     parse_options(args)
     check_for_offences
