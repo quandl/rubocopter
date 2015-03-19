@@ -2,7 +2,7 @@ require 'optparse'
 require 'shellwords'
 require 'rubocop'
 
-RuboCopter::Options = Struct.new(:hash)
+RuboCopter::Options = Struct.new(:hash, :debug)
 
 class RuboCopter::CLI
 
@@ -11,6 +11,8 @@ class RuboCopter::CLI
   def run(args = ARGV)
     parse_options(args)
     check_for_offences
+
+    return $?.exitstatus
   end
 
   private
@@ -70,13 +72,17 @@ class RuboCopter::CLI
   end
 
   def parse_options(args)
-    @options = RuboCopter::Options.new('master')
+    @options = RuboCopter::Options.new('master', false)
 
     opt_parser = OptionParser.new do |opts|
       opts.banner = "Usage: rubocopter [options]"
 
       opts.on('-c HASH', '--commit HASH', 'git hash to compare against') do |hash|
         @options.hash = hash
+      end
+
+      opts.on("--debug", "Prints runtime") do
+        @options.debug = true
       end
 
       opts.on("-h", "--help", "Prints this help") do
