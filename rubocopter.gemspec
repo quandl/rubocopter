@@ -11,13 +11,13 @@ Gem::Specification.new do |s|
   s.email       = ["matthew@quandl.com"]
   s.homepage    = "https://github.com/quandl/rubocopter"
   s.summary     = "Propel your RuboCop checking forward."
-  s.description = "Helps with speeding up rubocop checks in large git projects."
+  s.description = "Helps with speeding up RuboCop checks in large git projects."
   s.license     = "MIT"
 
   s.platform = Gem::Platform::RUBY
   s.required_ruby_version = '>= 1.9.3'
 
-  s.files = Dir["{bin,lib}/**/*", "MIT-LICENSE", "README.rdoc"]
+  s.files = Dir["{bin,lib}/**/*", "MIT-LICENSE", "README.md"]
   s.executables = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
   s.test_files = Dir["test/**/*"]
   s.require_paths = ['lib']
