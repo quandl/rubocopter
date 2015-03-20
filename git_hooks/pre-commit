@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Ensure your code is valid before commiting
+rubocopter
+
+if [ $? -ne 0 ]; then
+  echo 'Rubocop validation failed. Aborting commit.'
+  exit 1
+fi

@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Ensure your code is valid before pushing
+rubocopter
+
+if [ $? -ne 0 ]; then
+  echo 'Rubocop validation failed. Aborting push.'
+  exit 1
+fi

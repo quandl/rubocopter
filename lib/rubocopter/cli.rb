@@ -1,6 +1,7 @@
 require 'optparse'
 require 'shellwords'
 require 'rubocop'
+require 'pathname'
 
 RuboCopter::Options = Struct.new(:hash, :debug)
 
@@ -11,6 +12,7 @@ class RuboCopter::CLI
   def run(args = ARGV)
     parse_options(args)
     check_for_offences
+    show_results
 
     return $?.exitstatus
   end
@@ -38,25 +40,32 @@ class RuboCopter::CLI
   end
 
   def check_for_offences
+    # Check for git.
     if `which git` == ''
       puts 'git not detected. Running normal rubocop.'
       system(Shellwords.join(['rubocop', '-R'] + '--out rubocop_result.txt'.split))
-    else
-      `git rev-parse`
-      if $?.exitstatus == 0
-        files = changed_ruby_file_names
-        if files.length == 0
-          puts 'No changes detected, no reason to run rubocop'
-          exit(0)
-        else
-          system(Shellwords.join(['rubocop', '-R'] + files + '--out rubocop_result.txt'.split))
-        end
-      else
-        puts 'git directory not detected. Running normal rubocop.'
-        system(Shellwords.join(['rubocop', '-R'] + '--out rubocop_result.txt'.split))
-      end
+      return
     end
 
+    # Check for changes
+    `git rev-parse`
+    if $?.exitstatus == 0
+      files = changed_ruby_file_names
+      if files.length == 0
+        puts 'No changes detected, no reason to run rubocop'
+        exit(0)
+      else
+        system(Shellwords.join(['rubocop', '-R'] + files + '--out rubocop_result.txt'.split))
+      end
+      return
+    end
+
+    # No git directory
+    puts 'git directory not detected. Running normal rubocop.'
+    system(Shellwords.join(['rubocop', '-R'] + '--out rubocop_result.txt'.split))
+  end
+
+  def show_results
     if File.exists?('rubocop_result.txt')
       text = File.open('rubocop_result.txt').read
       puts text
@@ -81,6 +90,14 @@ class RuboCopter::CLI
         @options.hash = hash
       end
 
+      opts.on('--install-git-hooks HOOK', 'write git hooks to rubocopter. options : all, commit, push') do |hook|
+        install_git_hooks(hook)
+      end
+
+      opts.on('--remove-git-hooks HOOK', 'remove git hooks. options : all, commit, push') do |hook|
+        remove_git_hooks(hook)
+      end
+
       opts.on("--debug", "Prints runtime") do
         @options.debug = true
       end
@@ -92,6 +109,33 @@ class RuboCopter::CLI
     end
 
     opt_parser.parse!(args)
+  end
+
+  def install_git_hooks(hook)
+    working_dir_git_hooks = Pathname.new(Dir.pwd).join('.git', 'hooks')
+    current_path = Pathname.new(File.dirname(__FILE__))
+    if hook == 'commit'
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-commit'), working_dir_git_hooks]))
+    elsif hook == 'push'
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-push'), working_dir_git_hooks]))
+    elsif hook == 'all'
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-commit'), working_dir_git_hooks]))
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-push'), working_dir_git_hooks]))
+    end
+    exit(0)
+  end
+
+  def remove_git_hooks(hook)
+    working_dir_git_hooks = Pathname.new(Dir.pwd).join('.git', 'hooks')
+    if hook == 'commit'
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-commit')]))
+    elsif hook == 'push'
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-push')]))
+    elsif hook == 'all'
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-commit')]))
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-push')]))
+    end
+    exit(0)
   end
 
 end
