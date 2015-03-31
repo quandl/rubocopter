@@ -40,12 +40,16 @@ class RuboCopter::CLI
   end
 
   def check_for_offences(remaining_args = [])
-    rubocop_options = ['rubocop', '-R'] + remaining_args
+    rubocop_options = ['rubocop', '-R']
+    unless remaining_args.include?('--out')
+      rubocop_options += '--out rubocop_result.txt'.split
+    end
+    rubocop_options += remaining_args
 
     # Check for git.
     if `which git` == ''
       puts 'git not detected. Running normal rubocop.'
-      system(Shellwords.join(rubocop_options + '--out rubocop_result.txt'.split))
+      system(Shellwords.join(rubocop_options))
       return
     end
 
@@ -57,14 +61,14 @@ class RuboCopter::CLI
         puts 'No changes detected, no reason to run rubocop'
         exit(0)
       else
-        system(Shellwords.join(rubocop_options + files + '--out rubocop_result.txt'.split))
+        system(Shellwords.join(rubocop_options + files))
       end
       return
     end
 
     # No git directory
     puts 'git directory not detected. Running normal rubocop.'
-    system(Shellwords.join(rubocop_options + '--out rubocop_result.txt'.split))
+    system(Shellwords.join(rubocop_options))
   end
 
   def show_results
@@ -86,9 +90,9 @@ class RuboCopter::CLI
     @options = RuboCopter::Options.new('master', false)
 
     opt_parser = OptionParser.new do |opts|
-      opts.banner = "Rubocopter v:#{RuboCopter::VERSION}\nRubocop v:#{RuboCop::Version::STRING}\nUsage: rubocopter [options]"
+      opts.banner = "Rubocopter v:#{RuboCopter::VERSION}\nRubocop v:#{RuboCop::Version::STRING}\nUsage: rubocopter [options]\n    *Any unknown options will be passed to rubocop directly."
 
-      opts.on('-vcc HASH', '--commit HASH', 'git hash to compare against') do |hash|
+      opts.on('--commit HASH', 'git hash to compare against') do |hash|
         @options.hash = hash
       end
 
@@ -112,9 +116,16 @@ class RuboCopter::CLI
 
     remaining_args = {}
     begin
-      options = opt_parser.parse!(args)
+      opt_parser.parse(args)
     rescue OptionParser::InvalidOption => e
-      remaining_args = e.args
+      remaining_args = e.args.map do |arg|
+        arg_index = args.index(arg)
+        if args[arg_index + 1].start_with?('-')
+          args[arg_index]
+        else
+          [args[arg_index], args[arg_index + 1]]
+        end
+      end.flatten
     end
 
     remaining_args
