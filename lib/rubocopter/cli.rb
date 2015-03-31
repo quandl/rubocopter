@@ -20,7 +20,7 @@ class RuboCopter::CLI
   private
 
   def ruby_file?(name)
-    File.extname(name).casecmp('.rb') == 0
+    File.extname(name).casecmp('.rb') == 0 || File.extname(name).casecmp('.rake') == 0
   end
 
   def git_diff
