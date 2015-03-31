@@ -7,15 +7,14 @@ require_relative 'version'
 RuboCopter::Options = Struct.new(:hash, :debug)
 
 class RuboCopter::CLI
-
   attr_reader :options
 
   def run(args = ARGV)
-    parse_options(args)
-    check_for_offences
+    remaining_args = parse_options(args)
+    check_for_offences(remaining_args)
     show_results
 
-    return $?.exitstatus
+    $CHILD_STATUS.exitstatus
   end
 
   private
@@ -40,34 +39,36 @@ class RuboCopter::CLI
     rubyfiles
   end
 
-  def check_for_offences
+  def check_for_offences(remaining_args = [])
+    rubocop_options = ['rubocop', '-R'] + remaining_args
+
     # Check for git.
     if `which git` == ''
       puts 'git not detected. Running normal rubocop.'
-      system(Shellwords.join(['rubocop', '-R'] + '--out rubocop_result.txt'.split))
+      system(Shellwords.join(rubocop_options + '--out rubocop_result.txt'.split))
       return
     end
 
     # Check for changes
     `git rev-parse`
-    if $?.exitstatus == 0
+    if $CHILD_STATUS.exitstatus == 0
       files = changed_ruby_file_names
       if files.length == 0
         puts 'No changes detected, no reason to run rubocop'
         exit(0)
       else
-        system(Shellwords.join(['rubocop', '-R'] + files + '--out rubocop_result.txt'.split))
+        system(Shellwords.join(rubocop_options + files + '--out rubocop_result.txt'.split))
       end
       return
     end
 
     # No git directory
     puts 'git directory not detected. Running normal rubocop.'
-    system(Shellwords.join(['rubocop', '-R'] + '--out rubocop_result.txt'.split))
+    system(Shellwords.join(rubocop_options + '--out rubocop_result.txt'.split))
   end
 
   def show_results
-    if File.exists?('rubocop_result.txt')
+    if File.exist?('rubocop_result.txt')
       text = File.open('rubocop_result.txt').read
       puts text
       offense = /(\d+) offense/.match(text.split("\n")[-1])
@@ -85,9 +86,9 @@ class RuboCopter::CLI
     @options = RuboCopter::Options.new('master', false)
 
     opt_parser = OptionParser.new do |opts|
-      opts.banner = "Rubocopter v:#{RuboCopter::VERSION}\nUsage: rubocopter [options]"
+      opts.banner = "Rubocopter v:#{RuboCopter::VERSION}\nRubocop v:#{RuboCop::Version::STRING}\nUsage: rubocopter [options]"
 
-      opts.on('-c HASH', '--commit HASH', 'git hash to compare against') do |hash|
+      opts.on('-vcc HASH', '--commit HASH', 'git hash to compare against') do |hash|
         @options.hash = hash
       end
 
@@ -99,17 +100,24 @@ class RuboCopter::CLI
         remove_git_hooks(hook)
       end
 
-      opts.on("--debug", "Prints runtime") do
+      opts.on('--debug', 'Prints runtime') do
         @options.debug = true
       end
 
-      opts.on("-h", "--help", "Prints this help") do
+      opts.on('-h', '--help', 'Prints this help') do
         puts opts
         exit
       end
     end
 
-    opt_parser.parse!(args)
+    remaining_args = {}
+    begin
+      options = opt_parser.parse!(args)
+    rescue OptionParser::InvalidOption => e
+      remaining_args = e.args
+    end
+
+    remaining_args
   end
 
   def install_git_hooks(hook)
@@ -138,5 +146,4 @@ class RuboCopter::CLI
     end
     exit(0)
   end
-
 end
