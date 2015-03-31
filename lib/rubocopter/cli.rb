@@ -2,6 +2,7 @@ require 'optparse'
 require 'shellwords'
 require 'rubocop'
 require 'pathname'
+require_relative 'version'
 
 RuboCopter::Options = Struct.new(:hash, :debug)
 
@@ -84,7 +85,7 @@ class RuboCopter::CLI
     @options = RuboCopter::Options.new('master', false)
 
     opt_parser = OptionParser.new do |opts|
-      opts.banner = "Usage: rubocopter [options]"
+      opts.banner = "Rubocopter v:#{RuboCopter::VERSION}\nUsage: rubocopter [options]"
 
       opts.on('-c HASH', '--commit HASH', 'git hash to compare against') do |hash|
         @options.hash = hash
@@ -112,15 +113,15 @@ class RuboCopter::CLI
   end
 
   def install_git_hooks(hook)
-    working_dir_git_hooks = Pathname.new(Dir.pwd).join('.git', 'hooks')
+    working_dir_git_hooks = Pathname.new(Dir.pwd).join('.git', 'hooks').to_s
     current_path = Pathname.new(File.dirname(__FILE__))
     if hook == 'commit'
-      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-commit'), working_dir_git_hooks]))
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-commit').to_s, working_dir_git_hooks]))
     elsif hook == 'push'
-      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-push'), working_dir_git_hooks]))
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-push').to_s, working_dir_git_hooks]))
     elsif hook == 'all'
-      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-commit'), working_dir_git_hooks]))
-      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-push'), working_dir_git_hooks]))
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-commit').to_s, working_dir_git_hooks]))
+      system(Shellwords.join(['cp', current_path.join('../../git_hooks', 'pre-push').to_s, working_dir_git_hooks]))
     end
     exit(0)
   end
@@ -128,12 +129,12 @@ class RuboCopter::CLI
   def remove_git_hooks(hook)
     working_dir_git_hooks = Pathname.new(Dir.pwd).join('.git', 'hooks')
     if hook == 'commit'
-      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-commit')]))
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-commit').to_s]))
     elsif hook == 'push'
-      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-push')]))
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-push').to_s]))
     elsif hook == 'all'
-      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-commit')]))
-      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-push')]))
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-commit').to_s]))
+      system(Shellwords.join(['rm', working_dir_git_hooks.join('pre-push').to_s]))
     end
     exit(0)
   end
