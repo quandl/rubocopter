@@ -114,7 +114,7 @@ class RuboCopter::CLI
       end
     end
 
-    remaining_args = {}
+    remaining_args = []
     begin
       opt_parser.parse(args)
     rescue OptionParser::InvalidOption => e
