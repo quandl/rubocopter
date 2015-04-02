@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rubocopter (0.1.1)
+    rubocopter (0.1.2)
       rubocop (>= 0.29.1)
 
 GEM
