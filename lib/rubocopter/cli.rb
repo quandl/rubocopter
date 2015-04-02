@@ -120,7 +120,7 @@ class RuboCopter::CLI
     rescue OptionParser::InvalidOption => e
       remaining_args = e.args.map do |arg|
         arg_index = args.index(arg)
-        if args[arg_index + 1].start_with?('-')
+        if args[arg_index + 1] && args[arg_index + 1].start_with?('-')
           args[arg_index]
         else
           [args[arg_index], args[arg_index + 1]]
