@@ -53,6 +53,14 @@ class RuboCopter::CLI
       return
     end
 
+    # On master and checking against master
+    branch = `git rev-parse --abbrev-ref HEAD`.strip
+    if $CHILD_STATUS.exitstatus == 0 && branch == 'master' && @options.hash == 'master'
+      puts 'On master, running full rubocop sweep'
+      system(Shellwords.join(rubocop_options))
+      return
+    end
+
     # Check for changes
     `git rev-parse`
     if $CHILD_STATUS.exitstatus == 0
