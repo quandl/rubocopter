@@ -40,7 +40,7 @@ class RuboCopter::CLI
   end
 
   def check_for_offences(remaining_args = [])
-    rubocop_options = ['rubocop']
+    rubocop_options = ['rubocop', '--force-exclusion']
     unless remaining_args.include?('--out')
       rubocop_options += '--out rubocop_result.txt'.split
     end
