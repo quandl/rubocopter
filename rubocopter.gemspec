@@ -22,5 +22,5 @@ Gem::Specification.new do |s|
   s.test_files = Dir["test/**/*"]
   s.require_paths = ['lib']
 
-  s.add_dependency "rubocop", ">= 0.29.1"
+  s.add_dependency "rubocop", ">= 0.30.1"
 end
